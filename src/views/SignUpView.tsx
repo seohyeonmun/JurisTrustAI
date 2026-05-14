@@ -62,7 +62,7 @@ export const SignUpView: React.FC<{ onNavigate: (view: string) => void }> = ({ o
           {/* Branding/Visual Side */}
           <div className="hidden lg:flex flex-col justify-between p-12 bg-surface-container-low relative">
             <div className="z-10">
-              <h1 className="text-5xl text-ink mb-6">당신의 손끝에서 시작되는 전문적인 법률 가이드.</h1>
+              <h1 className="text-3xl lg:text-4xl font-semibold tracking-tight text-ink mb-6">당신의 손끝에서 시작되는<br/>전문적인 법률 가이드.</h1>
               <p className="text-lg text-on-surface-variant max-w-md">JurisTrust와 함께 현대적인 법률 상담을 경험해 보세요. 당신의 필요에 맞춘 전문적이고 안전한 맞춤형 서비스를 제공합니다.</p>
             </div>
             
