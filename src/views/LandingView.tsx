@@ -4,8 +4,10 @@ import { Footer } from '../components/common/Footer';
 import { Button } from '../components/ui/Button';
 import { ArrowRight, Gavel, FileText, Briefcase, Users, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useAuth } from '../lib/AuthContext';
 
 export const LandingView: React.FC<{ onNavigate: (view: string) => void }> = ({ onNavigate }) => {
+  const { user } = useAuth();
   return (
     <div className="min-h-screen flex flex-col">
       <Header currentView="landing" onNavigate={onNavigate} />
@@ -28,7 +30,7 @@ export const LandingView: React.FC<{ onNavigate: (view: string) => void }> = ({ 
                 복잡한 법률 용어와 절차, 이제 JurisTrust AI와 함께 해결하세요. 24시간 언제 어디서나 신뢰할 수 있는 법률 초안 작성과 가이드를 제공합니다.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button onClick={() => onNavigate('chat')} size="lg" className="gap-2">
+                <Button onClick={() => onNavigate(user ? 'chat' : 'login')} size="lg" className="gap-2" variant="vibrant">
                   상담 시작하기
                   <ArrowRight size={18} />
                 </Button>
@@ -75,7 +77,7 @@ export const LandingView: React.FC<{ onNavigate: (view: string) => void }> = ({ 
                   <h3 className="text-2xl text-ink mb-6">민사/형사 분쟁 가이드</h3>
                   <p className="text-on-surface-variant text-sm leading-relaxed">일상에서 발생하는 다양한 법적 갈등에 대한 체계적인 대응 시나리오와 판례 기반 가이드를 제공합니다. 법적 분쟁의 첫 걸음을 저희와 함께하세요.</p>
                 </div>
-                <div onClick={() => onNavigate('chat')} className="mt-12 flex items-center text-primary font-bold gap-2 cursor-pointer">
+                <div onClick={() => onNavigate(user ? 'chat' : 'login')} className="mt-12 flex items-center text-primary font-bold gap-2 cursor-pointer">
                   <span className="text-sm">자세히 알아보기</span>
                   <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -142,7 +144,7 @@ export const LandingView: React.FC<{ onNavigate: (view: string) => void }> = ({ 
               variant="secondary" 
               size="lg" 
               className="bg-white text-primary border-none relative z-10 hover:bg-canvas"
-              onClick={() => onNavigate('chat')}
+              onClick={() => onNavigate(user ? 'chat' : 'login')}
             >
               지금 시작하기
             </Button>

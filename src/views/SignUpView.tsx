@@ -1,12 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Header } from '../components/common/Header';
 import { Footer } from '../components/common/Footer';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Gavel, ShieldCheck } from 'lucide-react';
+import { Gavel, ShieldCheck, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export const SignUpView: React.FC<{ onNavigate: (view: string) => void }> = ({ onNavigate }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 6) {
+      setError('비밀번호는 최소 6자 이상이어야 합니다.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(user, { displayName: name });
+      onNavigate('chat');
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/operation-not-allowed') {
+        setError('이메일/비밀번호 로그인이 설정되지 않았습니다. Firebase 콘솔에서 해당 기능을 활성화해 주세요.');
+      } else if (err.code === 'auth/email-already-in-use') {
+        setError('이미 사용 중인 이메일 주소입니다.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('비밀번호가 너무 취약합니다. 6자 이상의 보안성이 더 높은 비밀번호를 사용해 주세요.');
+      } else {
+        setError(err.message || '회원가입에 실패했습니다.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header currentView="signup" onNavigate={onNavigate} />
@@ -53,14 +95,44 @@ export const SignUpView: React.FC<{ onNavigate: (view: string) => void }> = ({ o
               <p className="text-sm text-on-surface-variant font-medium">전문적인 법률 상담 서비스를 시작하기 위해 정보를 입력해 주세요.</p>
             </div>
             
-            <form className="flex flex-col gap-5" onSubmit={(e) => { e.preventDefault(); onNavigate('login'); }}>
-              <Input label="성명" placeholder="홍길동" type="text" />
-              <Input label="이메일 주소" placeholder="example@legal.com" type="email" />
+            <form className="flex flex-col gap-5" onSubmit={handleSignUp}>
+              <Input 
+                label="성명" 
+                placeholder="홍길동" 
+                type="text" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <Input 
+                label="이메일 주소" 
+                placeholder="example@legal.com" 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="비밀번호" placeholder="••••••••" type="password" />
-                <Input label="비밀번호 확인" placeholder="••••••••" type="password" />
+                <Input 
+                  label="비밀번호" 
+                  placeholder="••••••••" 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <Input 
+                  label="비밀번호 확인" 
+                  placeholder="••••••••" 
+                  type="password" 
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
               </div>
+
+              {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
 
               <div className="flex items-start gap-3 py-2">
                 <input type="checkbox" id="terms" className="mt-1 rounded border-border-hairline text-primary focus:ring-primary h-4 w-4" required />
@@ -69,8 +141,8 @@ export const SignUpView: React.FC<{ onNavigate: (view: string) => void }> = ({ o
                 </label>
               </div>
 
-              <Button type="submit" fullWidth size="lg" className="mt-4">
-                회원가입 완료
+              <Button type="submit" fullWidth size="lg" className="mt-4" disabled={loading} variant="vibrant">
+                {loading ? <Loader2 className="animate-spin mr-2" size={18} /> : '회원가입 완료'}
               </Button>
             </form>
 

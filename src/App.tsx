@@ -3,16 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LandingView } from './views/LandingView';
 import { LoginView } from './views/LoginView';
 import { SignUpView } from './views/SignUpView';
 import { ProfileView } from './views/ProfileView';
 import { ChatView } from './views/ChatView';
 import { AnimatePresence, motion } from 'motion/react';
+import { AuthProvider } from './lib/AuthContext';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('landing');
+  const [currentView, setCurrentView] = useState(() => {
+    return localStorage.getItem('currentView') || 'landing';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('currentView', currentView);
+  }, [currentView]);
 
   const renderView = () => {
     switch (currentView) {
@@ -32,18 +39,20 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentView}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {renderView()}
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <AuthProvider>
+      <div className="min-h-screen">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentView}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderView()}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </AuthProvider>
   );
 }

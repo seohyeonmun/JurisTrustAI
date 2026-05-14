@@ -1,13 +1,57 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Header } from '../components/common/Header';
 import { Footer } from '../components/common/Footer';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
-import { Mail, Lock, UserCircle } from 'lucide-react';
+import { Mail, Lock, UserCircle, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useAuth } from '../lib/AuthContext';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export const LoginView: React.FC<{ onNavigate: (view: string) => void }> = ({ onNavigate }) => {
+  const { loginWithGoogle } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      onNavigate('chat');
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/operation-not-allowed') {
+        setError('이메일/비밀번호 로그인이 설정되지 않았습니다. Firebase 콘솔에서 해당 기능을 활성화해 주세요.');
+      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+      } else {
+        setError(err.message || '로그인에 실패했습니다.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await loginWithGoogle();
+      onNavigate('chat');
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Google 로그인에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header currentView="login" onNavigate={onNavigate} />
@@ -24,12 +68,15 @@ export const LoginView: React.FC<{ onNavigate: (view: string) => void }> = ({ on
               <p className="text-sm text-on-surface-variant font-medium">법률 전문가와의 상담을 위해 계정에 접속하세요.</p>
             </div>
             
-            <form className="flex flex-col gap-6" onSubmit={(e) => { e.preventDefault(); onNavigate('chat'); }}>
+            <form className="flex flex-col gap-6" onSubmit={handleLogin}>
               <Input 
                 label="이메일 주소" 
                 placeholder="example@juristrust.com" 
                 type="email" 
                 icon={Mail} 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
               
               <div className="flex flex-col gap-2">
@@ -41,11 +88,16 @@ export const LoginView: React.FC<{ onNavigate: (view: string) => void }> = ({ on
                   placeholder="비밀번호 입력" 
                   type="password" 
                   icon={Lock} 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </div>
 
-              <Button type="submit" fullWidth size="lg" className="mt-4">
-                로그인
+              {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+
+              <Button type="submit" fullWidth size="lg" className="mt-4" disabled={loading} variant="vibrant">
+                {loading ? <Loader2 className="animate-spin mr-2" size={18} /> : '로그인'}
               </Button>
             </form>
 
@@ -56,7 +108,11 @@ export const LoginView: React.FC<{ onNavigate: (view: string) => void }> = ({ on
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center gap-2 py-3 border border-border-hairline rounded-lg hover:bg-surface-container-low transition-colors text-xs font-bold text-on-surface-variant">
+              <button 
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 py-3 border border-border-hairline rounded-lg hover:bg-surface-container-low transition-colors text-xs font-bold text-on-surface-variant disabled:opacity-50"
+              >
                 <img 
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFO6mQ_CLgOrknRH2sfZu8C-lkwkmhfIoxxq2BljpznIXSkD98vtLgEhTBcfbi4g503Pf4BCwwq4BtPehK8lDpr1c8KI_EvUqs21FQeKPLDnQSj474OWaiNOU2nqmZyj7qpgWTGgDBrUwuSWOwrWjAq8VL5eY-9cUakD3ztpQimrg_VeXepFDM0vLR93kVgmBLQ6hv0CrH1QN_XEIkJFJPzw-GBmuXQtXDk-T8X5fngVl0MzNfL2h0hQIqxEnFz2a8J2_tAO9x_fo" 
                   className="w-4 h-4" 
